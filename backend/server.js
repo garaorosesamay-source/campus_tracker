@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 
 const express = require('express');
@@ -196,30 +195,24 @@ async function requireSuperadmin(req, res, next) {
 
 const adminRouter = express.Router();
 
-// All admin directory routes require
-// valid Firebase token and active Superadmin
 adminRouter.use(verifyFirebaseToken);
 adminRouter.use(requireSuperadmin);
 
-// -------------------------------------
 // GET ALL ADMINS
-// GET /api/admins
-// -------------------------------------
-
 adminRouter.get('/', async (req, res) => {
   try {
     const [rows] = await pool.execute(
       `SELECT
-          p.id,
-          p.username,
-          p.name,
-          p.last_name AS lastName,
-          p.image,
-          a.email,
-          a.role,
-          COALESCE(a.status, 'Inactive') AS status,
-          a.firebase_uid AS firebaseUid,
-          p.created_at AS createdAt
+         p.id,
+         p.username,
+         p.name,
+         p.last_name AS lastName,
+         p.image,
+         a.email,
+         a.role,
+         COALESCE(a.status, 'Inactive') AS status,
+         a.firebase_uid AS firebaseUid,
+         p.created_at AS createdAt
        FROM admin_profiles p
        LEFT JOIN admin_accounts a
          ON p.account_id = a.id
@@ -237,11 +230,7 @@ adminRouter.get('/', async (req, res) => {
   }
 });
 
-// -------------------------------------
 // ADD ADMIN DIRECTORY RECORD
-// POST /api/admins
-// -------------------------------------
-
 adminRouter.post('/', async (req, res) => {
   try {
     const { name, lastName, username, image } = req.body;
@@ -285,16 +274,16 @@ adminRouter.post('/', async (req, res) => {
 
     const [rows] = await pool.execute(
       `SELECT
-          id,
-          username,
-          name,
-          last_name AS lastName,
-          image,
-          NULL AS email,
-          NULL AS role,
-          'Inactive' AS status,
-          NULL AS firebaseUid,
-          created_at AS createdAt
+         id,
+         username,
+         name,
+         last_name AS lastName,
+         image,
+         NULL AS email,
+         NULL AS role,
+         'Inactive' AS status,
+         NULL AS firebaseUid,
+         created_at AS createdAt
        FROM admin_profiles
        WHERE id = ?`,
       [result.insertId]
@@ -315,11 +304,7 @@ adminRouter.post('/', async (req, res) => {
   }
 });
 
-// -------------------------------------
 // UPDATE ADMIN DIRECTORY RECORD
-// PUT /api/admins/:id
-// -------------------------------------
-
 adminRouter.put('/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -382,16 +367,16 @@ adminRouter.put('/:id', async (req, res) => {
 
     const [rows] = await pool.execute(
       `SELECT
-          p.id,
-          p.username,
-          p.name,
-          p.last_name AS lastName,
-          p.image,
-          a.email,
-          a.role,
-          COALESCE(a.status, 'Inactive') AS status,
-          a.firebase_uid AS firebaseUid,
-          p.created_at AS createdAt
+         p.id,
+         p.username,
+         p.name,
+         p.last_name AS lastName,
+         p.image,
+         a.email,
+         a.role,
+         COALESCE(a.status, 'Inactive') AS status,
+         a.firebase_uid AS firebaseUid,
+         p.created_at AS createdAt
        FROM admin_profiles p
        LEFT JOIN admin_accounts a
          ON p.account_id = a.id
@@ -414,11 +399,7 @@ adminRouter.put('/:id', async (req, res) => {
   }
 });
 
-// -------------------------------------
 // DELETE ADMIN DIRECTORY RECORD
-// DELETE /api/admins/:id
-// -------------------------------------
-
 adminRouter.delete('/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -430,8 +411,6 @@ adminRouter.delete('/:id', async (req, res) => {
       });
     }
 
-    // Only delete unlinked directory records.
-    // Linked login accounts are protected.
     const [result] = await pool.execute(
       `DELETE FROM admin_profiles
        WHERE id = ? AND account_id IS NULL`,
@@ -499,7 +478,7 @@ app.use((err, req, res, next) => {
 });
 
 // =====================================
-// 11. START SERVER
+// 11. START SERVER (Updated for Render)
 // =====================================
 
 async function startServer() {
@@ -509,24 +488,21 @@ async function startServer() {
     console.log('MySQL connected successfully');
     console.log('Database:', process.env.DB_NAME || 'sis_db');
 
-    const server = app.listen(PORT, () => {
+    // Binago natin para tanggapin ang '0.0.0.0' para sa external traffic ng Render
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log('=================================');
       console.log('Campus Supply API is running');
-      console.log(`Server: http://localhost:${PORT}`);
-      console.log(`Test: http://localhost:${PORT}/api/test`);
-      console.log(`Debug: http://localhost:${PORT}/api/debug-check`);
-      console.log(`Admins: http://localhost:${PORT}/api/admins`);
+      console.log(`Server: http://0.0.0.0:${PORT}`);
       console.log('=================================');
     });
 
     server.on('error', (err) => {
       console.error('HTTP server error:', err.message);
-      process.exitCode = 1;
+      process.exit(1);
     });
   } catch (err) {
     console.error('Failed to start server:', err.message);
-    process.exitCode = 1;
-    await pool.end().catch(() => {});
+    process.exit(1);
   }
 }
 
