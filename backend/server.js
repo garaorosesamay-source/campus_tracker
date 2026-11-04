@@ -40,15 +40,15 @@ if (!getApps().length) {
 console.log('Firebase Admin SDK initialized');
 
 // =====================================
-// 3. MYSQL CONNECTION (ITO ANG NAWALA KAYA NAG-ERROR)
+// 3. MYSQL CONNECTION (Gumagamit ng Environment Variables)
 // =====================================
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST,         // Ilagay dito ang remote host mula sa database provider mo
   port: Number(process.env.DB_PORT) || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'sis_db',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 
   waitForConnections: true,
   connectionLimit: 10,
@@ -70,15 +70,6 @@ app.get('/api/test', (req, res) => {
   res.json({
     success: true,
     message: 'API connection successful',
-  });
-});
-
-app.get('/api/debug-check', (req, res) => {
-  res.json({
-    server: 'CAMPUS-SUPPLY-UPDATED',
-    route: '/api/debug-check',
-    port: PORT,
-    message: 'Correct server.js is running',
   });
 });
 
@@ -469,11 +460,11 @@ app.use((err, req, res, next) => {
 
 async function startServer() {
   try {
-    console.log('Attempting to connect to MySQL...');
+    console.log('Attempting to connect to Cloud MySQL...');
     await pool.query('SELECT 1');
 
     console.log('MySQL connected successfully');
-    console.log('Database:', process.env.DB_NAME || 'sis_db');
+    console.log('Database:', process.env.DB_NAME);
 
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log('=================================');
@@ -488,7 +479,6 @@ async function startServer() {
     });
   } catch (err) {
     console.error('CRITICAL STARTUP ERROR:', err.message);
-    console.error('Full Error Object:', err);
     process.exit(1);
   }
 }
