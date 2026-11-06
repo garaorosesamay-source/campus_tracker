@@ -1,0 +1,123 @@
+:root {
+  --sis-violet: #4caf50;
+  --sis-violet-hover: #66bb6a;
+  --sis-violet-soft: rgba(76, 175, 80, 0.15);
+}
+
+[data-bs-theme='dark'] {
+  --bs-primary: var(--sis-violet);
+  --bs-primary-rgb: 76, 175, 80;
+  --bs-link-color: var(--sis-violet);
+  --bs-link-color-rgb: 76, 175, 80;
+  --bs-link-hover-color: var(--sis-violet-hover);
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--sis-violet);
+  --bs-btn-border-color: var(--sis-violet);
+  --bs-btn-hover-bg: var(--sis-violet-hover);
+  --bs-btn-hover-border-color: var(--sis-violet-hover);
+  --bs-btn-active-bg: var(--sis-violet-hover);
+  --bs-btn-active-border-color: var(--sis-violet-hover);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--sis-violet);
+  --bs-btn-border-color: var(--sis-violet);
+  --bs-btn-hover-bg: var(--sis-violet);
+  --bs-btn-hover-border-color: var(--sis-violet);
+  --bs-btn-active-bg: var(--sis-violet);
+  --bs-btn-active-border-color: var(--sis-violet);
+}
+
+.nav-pills .nav-link.active {
+  background-color: var(--sis-violet);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--sis-violet);
+  box-shadow: 0 0 0 0.25rem var(--sis-violet-soft);
+}
+
+.progress-bar {
+  background-color: var(--sis-violet);
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--bs-border-color);
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.brand-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--sis-violet-soft);
+  color: var(--sis-violet);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.avatar-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bs-tertiary-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+}
+
+.avatar-circle-lg {
+  width: 88px;
+  height: 88px;
+  font-size: 2.25rem;
+  position: relative;
+  cursor: pointer;
+  border: 1px solid var(--bs-border-color);
+  background: var(--sis-violet-soft);
+  color: var(--sis-violet);
+}
+
+.avatar-camera-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--sis-violet);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+}
+
+.stat-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+}
