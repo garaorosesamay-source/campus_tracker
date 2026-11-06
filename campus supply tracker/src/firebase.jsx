@@ -2,13 +2,14 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+// Firebase web configuration for the inventory-53b1f project.
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: "AIzaSyBAoGP77GMIOJCPelE67f8zy3qyLWHZaLE",
+  authDomain: "inventory-53b1f.firebaseapp.com",
+  projectId: "inventory-53b1f",
+  storageBucket: "inventory-53b1f.firebasestorage.app",
+  messagingSenderId: "979846521821",
+  appId: "1:979846521821:web:5021cc32df36b0991c0c34"
 };
 
 const app = initializeApp(firebaseConfig);
