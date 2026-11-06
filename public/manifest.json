@@ -1,0 +1,20 @@
+{
+    "name": "School Supplies",
+    "short_name": "School Supplies",
+    "start_url": "/",
+    "background_color": "#0D6EFD",
+    "theme_color": "#0A2472",
+    "display": "standalone",
+    "icons": [
+        {
+            "src": "/logo/arlan192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/logo/arlan512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
