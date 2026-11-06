@@ -1,8 +1,23 @@
 
 
 import { useEffect, useMemo, useState } from 'react';
+import { auth } from '../firebase';
 
-const API_URL = 'http://localhost:8080/api/admins';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\\/$/, '');
+const API_URL = `${API_BASE_URL}/api/admins`;
+
+async function authenticatedFetch(url, options = {}) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Please sign in again to manage administrators.');
+  const token = await user.getIdToken();
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
 
 export default function SuperAdminDashboard({ onLogout }) {
 
@@ -41,7 +56,7 @@ export default function SuperAdminDashboard({ onLogout }) {
 
     try {
 
-      const response = await fetch(API_URL);
+      const response = await authenticatedFetch(API_URL);
 
       if (!response.ok) {
 
@@ -59,7 +74,7 @@ export default function SuperAdminDashboard({ onLogout }) {
 
       setError(
 
-        'Cannot connect to the server. Make sure server.js is running on port 8080.'
+        'Unable to reach the API. Check the Render service URL and deployment status.'
 
       );
 
@@ -122,7 +137,7 @@ export default function SuperAdminDashboard({ onLogout }) {
 
     try {
 
-      const response = await fetch(API_URL, {
+      const response = await authenticatedFetch(API_URL, {
 
         method: 'POST',
 
@@ -210,7 +225,7 @@ export default function SuperAdminDashboard({ onLogout }) {
 
     try {
 
-      const response = await fetch(`${API_URL}/${editID}`, {
+      const response = await authenticatedFetch(`${API_URL}/${editID}`, {
 
         method: 'PUT',
 
@@ -279,7 +294,7 @@ export default function SuperAdminDashboard({ onLogout }) {
 
     try {
 
-      const response = await fetch(`${API_URL}/${deleteID}`, {
+      const response = await authenticatedFetch(`${API_URL}/${deleteID}`, {
 
         method: 'DELETE',
 
