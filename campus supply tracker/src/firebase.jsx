@@ -16,4 +16,9 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Ask Google to show the account chooser on every sign-in attempt.
+googleProvider.setCustomParameters({
+  prompt: "select_account"
+});
 export const db = getFirestore(app);
