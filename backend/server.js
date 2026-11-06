@@ -69,6 +69,105 @@ async function requireSuperadmin(req, res, next) {
   }
 }
 
+// User records are stored in the same Firestore collection used by Firebase Authentication.
+const users = db.collection('users');
+
+// List registered Campus Tracker users (Superadmin only).
+app.get('/api/user', requireSuperadmin, async (_req, res, next) => {
+  try {
+    const snapshot = await users.get();
+    res.json(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+  } catch (error) { next(error); }
+});
+
+// Attach a profile to an existing Firebase Authentication account.
+app.post('/api/user', requireSuperadmin, async (req, res, next) => {
+  try {
+    const uid = String(req.body.uid || '').trim();
+    const name = String(req.body.name || '').trim();
+    const username = String(req.body.username || '').trim();
+    const role = String(req.body.role || 'Admin').trim();
+
+    if (!uid || !name || !['Admin', 'Superadmin'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'A valid Firebase uid, name, and role (Admin or Superadmin) are required.' });
+    }
+
+    const firebaseUser = await auth.getUser(uid);
+    const ref = users.doc(uid);
+    const existing = await ref.get();
+    if (existing.exists) {
+      return res.status(409).json({ success: false, message: 'A profile already exists for this user.' });
+    }
+
+    const profile = {
+      uid,
+      username: username || firebaseUser.email?.split('@')[0] || '',
+      role,
+      name,
+      email: firebaseUser.email || '',
+      image: firebaseUser.photoURL || '',
+      createdAt: FieldValue.serverTimestamp(),
+    };
+    await ref.set(profile);
+    res.status(201).json({ id: uid, ...profile, createdAt: null });
+  } catch (error) {
+    if (error.code === 'auth/user-not-found') {
+      return res.status(404).json({ success: false, message: 'Firebase Authentication user was not found. Create the account in Firebase Authentication first.' });
+    }
+    next(error);
+  }
+});
+
+// Update a user's Firestore profile and Firebase display name.
+app.put('/api/user/:id', requireSuperadmin, async (req, res, next) => {
+  try {
+    const name = String(req.body.name || '').trim();
+    const role = String(req.body.role || '').trim();
+    const username = req.body.username === undefined ? undefined : String(req.body.username).trim();
+
+    if (!name || !['Admin', 'Superadmin'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'A name and valid role (Admin or Superadmin) are required.' });
+    }
+
+    const ref = users.doc(req.params.id);
+    const existing = await ref.get();
+    if (!existing.exists) return res.status(404).json({ success: false, message: 'User profile not found.' });
+
+    const updates = { name, role, updatedAt: FieldValue.serverTimestamp() };
+    if (username !== undefined) updates.username = username;
+    await ref.update(updates);
+
+    try {
+      await auth.updateUser(req.params.id, { displayName: name });
+    } catch (error) {
+      if (error.code !== 'auth/user-not-found') throw error;
+    }
+
+    res.json({ id: req.params.id, ...existing.data(), ...updates, updatedAt: null });
+  } catch (error) { next(error); }
+});
+
+// Delete both the Firebase Authentication account and its Firestore profile.
+app.delete('/api/user/:id', requireSuperadmin, async (req, res, next) => {
+  try {
+    const ref = users.doc(req.params.id);
+    const existing = await ref.get();
+    if (!existing.exists) return res.status(404).json({ success: false, message: 'User profile not found.' });
+
+    await auth.deleteUser(req.params.id);
+    await ref.delete();
+    res.json({ success: true, id: req.params.id });
+  } catch (error) {
+    if (error.code === 'auth/user-not-found') {
+      try {
+        await users.doc(req.params.id).delete();
+        return res.json({ success: true, id: req.params.id, note: 'Firestore profile deleted; Firebase Auth account was already absent.' });
+      } catch (deleteError) { return next(deleteError); }
+    }
+    next(error);
+  }
+});
+
 const admins = db.collection('admins');
 
 app.get('/api/admins', requireSuperadmin, async (_req, res, next) => {
