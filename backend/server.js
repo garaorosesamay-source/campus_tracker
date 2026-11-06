@@ -10,6 +10,7 @@ const {
 } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const mysql = require('mysql2/promise');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 8080;
@@ -45,10 +46,44 @@ if (!getApps().length) {
 }
 
 const auth = getAuth();
-const db = getFirestore();
+const firestore = getFirestore();
+
+// =====================================
+// MYSQL DATABASE CONNECTION (XAMPP)
+// =====================================
+// Local .env defaults are for XAMPP. Do not use localhost for a remote server.
+const db = mysql.createPool({
+  host: process.env.DB_HOST || '127.0.0.1',
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'campus_tracker_db',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
+
 
 app.get('/', (_req, res) => res.json({ success: true, message: 'Campus Tracker API is running' }));
 app.get('/api/health', (_req, res) => res.json({ success: true, message: 'Server is healthy' }));
+
+// Verify that the API can reach the configured MySQL database.
+app.get('/api/db-test', async (_req, res) => {
+  try {
+    const [rows] = await db.query('SELECT DATABASE() AS databaseName, 1 AS connected');
+    res.json({
+      success: true,
+      message: 'MySQL connection successful',
+      database: rows[0].databaseName,
+    });
+  } catch (error) {
+    console.error('MySQL connection failed:', error.message);
+    res.status(503).json({
+      success: false,
+      message: 'Could not connect to MySQL. Check that XAMPP MySQL is running and your DB settings are correct.',
+    });
+  }
+});
 
 async function requireSuperadmin(req, res, next) {
   try {
@@ -57,7 +92,7 @@ async function requireSuperadmin(req, res, next) {
       return res.status(401).json({ success: false, message: 'Missing Firebase authentication token.' });
     }
     const decoded = await auth.verifyIdToken(header.slice(7), true);
-    const profile = await db.collection('users').doc(decoded.uid).get();
+    const profile = await firestore.collection('users').doc(decoded.uid).get();
     if (!profile.exists || profile.data().role !== 'Superadmin') {
       return res.status(403).json({ success: false, message: 'Superadmin access required.' });
     }
@@ -70,7 +105,7 @@ async function requireSuperadmin(req, res, next) {
 }
 
 // User records are stored in the same Firestore collection used by Firebase Authentication.
-const users = db.collection('users');
+const users = firestore.collection('users');
 
 // List registered Campus Tracker users (Superadmin only).
 app.get('/api/user', requireSuperadmin, async (_req, res, next) => {
@@ -168,7 +203,7 @@ app.delete('/api/user/:id', requireSuperadmin, async (req, res, next) => {
   }
 });
 
-const admins = db.collection('admins');
+const admins = firestore.collection('admins');
 
 app.get('/api/admins', requireSuperadmin, async (_req, res, next) => {
   try {
