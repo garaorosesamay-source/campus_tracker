@@ -7,8 +7,8 @@ const FILES_TO_CACHE = [
     "/css/bootstrap.min.css",
     "/css/style.css",
     "/js/app.js",
-    "/logo/arlan192.png",
-    "/logo/arlan512.png"
+    "/logo/192.jpg",
+    "/logo/512.jpg"
 ];
 
 self.addEventListener("install", event => {
