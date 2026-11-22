@@ -2,11 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-<<<<<<< HEAD
-=======
 const mysql = require('mysql2/promise');
-
->>>>>>> 8790b48 (Update frontend and backend for campus supply tracker)
 const {
   initializeApp,
   cert,
@@ -15,19 +11,14 @@ const {
 } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
-const mysql = require('mysql2/promise');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 8080;
-<<<<<<< HEAD
 
 const allowedOrigins = (process.env.CLIENT_URL || 'https://campustr.netlify.app,http://localhost:5173')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
-=======
-const DB_NAME = process.env.DB_NAME || 'campus_tracker_db';
->>>>>>> 8790b48 (Update frontend and backend for campus supply tracker)
 
 app.use(cors({
   origin(origin, callback) {
@@ -37,16 +28,10 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-app.use(express.json({ limit: '1mb' }));
 
-<<<<<<< HEAD
-// Render: set FIREBASE_SERVICE_ACCOUNT to the complete service-account JSON.
-// Local development may use GOOGLE_APPLICATION_CREDENTIALS instead.
-=======
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
->>>>>>> 8790b48 (Update frontend and backend for campus supply tracker)
 if (!getApps().length) {
   let credential;
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -63,11 +48,6 @@ if (!getApps().length) {
 const auth = getAuth();
 const firestore = getFirestore();
 
-<<<<<<< HEAD
-// =====================================
-// MYSQL DATABASE CONNECTION (XAMPP)
-// =====================================
-// Local .env defaults are for XAMPP. Do not use localhost for a remote server.
 const db = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
   port: Number(process.env.DB_PORT) || 3306,
@@ -77,205 +57,12 @@ const db = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-=======
-let dbPool;
-
-async function initializeDatabase() {
-  const dbHost = process.env.DB_HOST || 'localhost';
-  const dbPort = Number(process.env.DB_PORT) || 3306;
-  const dbUser = process.env.DB_USER || 'root';
-  const dbPassword = process.env.DB_PASSWORD || '';
-
-  const tempConnection = await mysql.createConnection({
-    host: dbHost,
-    port: dbPort,
-    user: dbUser,
-    password: dbPassword,
-  });
-
-  await tempConnection.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;`);
-  await tempConnection.end();
-
-  dbPool = mysql.createPool({
-    host: dbHost,
-    port: dbPort,
-    user: dbUser,
-    password: dbPassword,
-    database: DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-  });
-
-  const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS admin (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      username VARCHAR(255) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-  await dbPool.query(createTableQuery);
-  console.log(`MySQL Database ('${DB_NAME}') and 'admin' table verified/created successfully via XAMPP`);
-}
-
-app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Campus Tracker API is running (Firebase + XAMPP MySQL mode)',
-  });
->>>>>>> 8790b48 (Update frontend and backend for campus supply tracker)
 });
 
-
-<<<<<<< HEAD
 app.get('/', (_req, res) => res.json({ success: true, message: 'Campus Tracker API is running' }));
 app.get('/api/health', (_req, res) => res.json({ success: true, message: 'Server is healthy' }));
 
-// Verify that the API can reach the configured MySQL database.
 app.get('/api/db-test', async (_req, res) => {
-=======
-app.get('/api/db-test', async (req, res) => {
-  try {
-    const [rows] = await dbPool.query('SELECT 1 + 1 AS solution');
-    res.json({
-      success: true,
-      message: `Database query executed successfully on ${DB_NAME}`,
-      result: rows[0].solution,
-    });
-  } catch (err) {
-    console.error('DB Query Error:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Database query failed',
-      error: err.message,
-    });
-  }
-});
-
-app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Server is running and healthy',
-  });
-});
-
-app.get('/api/admins', async (req, res) => {
-  try {
-    const [rows] = await dbPool.query('SELECT id, name, username AS lastName FROM admin');
-    res.json(rows);
-  } catch (err) {
-    console.error('Error fetching admins:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch admins',
-      error: err.message,
-    });
-  }
-});
-
-app.post('/api/admins', async (req, res) => {
-  try {
-    const name = req.body.name || req.body.firstName || req.body.firstname;
-    const lastName = req.body.lastName || req.body.lastname || 'Admin';
-
-    if (!name) {
-      return res.status(400).json({
-        success: false,
-        message: 'First name is required',
-      });
-    }
-
-    const [result] = await dbPool.query(
-      'INSERT INTO admin (name, username) VALUES (?, ?)',
-      [name, lastName]
-    );
-
-    res.status(201).json({
-      id: result.insertId,
-      name: name,
-      lastName: lastName,
-    });
-  } catch (err) {
-    console.error('Error adding admin:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to add admin',
-      error: err.message,
-    });
-  }
-});
-
-app.put('/api/admins/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const name = req.body.name || req.body.firstName || req.body.firstname;
-    const lastName = req.body.lastName || req.body.lastname || 'Admin';
-
-    if (!name) {
-      return res.status(400).json({
-        success: false,
-        message: 'First name is required',
-      });
-    }
-
-    const [result] = await dbPool.query(
-      'UPDATE admin SET name = ?, username = ? WHERE id = ?',
-      [name, lastName, id]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Admin not found',
-      });
-    }
-
-    res.json({
-      id: Number(id),
-      name: name,
-      lastName: lastName,
-    });
-  } catch (err) {
-    console.error('Error updating admin:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update admin',
-      error: err.message,
-    });
-  }
-});
-
-app.delete('/api/admins/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const [result] = await dbPool.query('DELETE FROM admin WHERE id = ?', [id]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Admin not found',
-      });
-    }
-
-    res.json({
-      success: false, 
-      message: 'Admin deleted successfully',
-      id: Number(id),
-    });
-  } catch (err) {
-    console.error('Error deleting admin:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete admin',
-      error: err.message,
-    });
-  }
-});
-
-async function verifyFirebaseToken(req, res, next) {
->>>>>>> 8790b48 (Update frontend and backend for campus supply tracker)
   try {
     const [rows] = await db.query('SELECT DATABASE() AS databaseName, 1 AS connected');
     res.json({
@@ -287,7 +74,7 @@ async function verifyFirebaseToken(req, res, next) {
     console.error('MySQL connection failed:', error.message);
     res.status(503).json({
       success: false,
-      message: 'Could not connect to MySQL. Check that XAMPP MySQL is running and your DB settings are correct.',
+      message: 'Could not connect to MySQL. Check that MySQL is running and DB environment variables are set.',
     });
   }
 });
@@ -311,11 +98,8 @@ async function requireSuperadmin(req, res, next) {
   }
 }
 
-<<<<<<< HEAD
-// User records are stored in the same Firestore collection used by Firebase Authentication.
 const users = firestore.collection('users');
 
-// List registered Campus Tracker users (Superadmin only).
 app.get('/api/user', requireSuperadmin, async (_req, res, next) => {
   try {
     const snapshot = await users.get();
@@ -323,7 +107,6 @@ app.get('/api/user', requireSuperadmin, async (_req, res, next) => {
   } catch (error) { next(error); }
 });
 
-// Attach a profile to an existing Firebase Authentication account.
 app.post('/api/user', requireSuperadmin, async (req, res, next) => {
   try {
     const uid = String(req.body.uid || '').trim();
@@ -334,22 +117,6 @@ app.post('/api/user', requireSuperadmin, async (req, res, next) => {
     if (!uid || !name || !['Admin', 'Superadmin'].includes(role)) {
       return res.status(400).json({ success: false, message: 'A valid Firebase uid, name, and role (Admin or Superadmin) are required.' });
     }
-=======
-app.get('/api/protected-test', verifyFirebaseToken, (req, res) => {
-  res.json({
-    success: true,
-    message: 'Authenticated successfully with Firebase',
-    user: req.user,
-  });
-});
-
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `API route not found: ${req.method} ${req.originalUrl}`,
-  });
-});
->>>>>>> 8790b48 (Update frontend and backend for campus supply tracker)
 
     const firebaseUser = await auth.getUser(uid);
     const ref = users.doc(uid);
@@ -377,8 +144,6 @@ app.use((req, res) => {
   }
 });
 
-<<<<<<< HEAD
-// Update a user's Firestore profile and Firebase display name.
 app.put('/api/user/:id', requireSuperadmin, async (req, res, next) => {
   try {
     const name = String(req.body.name || '').trim();
@@ -407,7 +172,6 @@ app.put('/api/user/:id', requireSuperadmin, async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-// Delete both the Firebase Authentication account and its Firestore profile.
 app.delete('/api/user/:id', requireSuperadmin, async (req, res, next) => {
   try {
     const ref = users.doc(req.params.id);
@@ -479,21 +243,3 @@ app.use((error, _req, res, _next) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => console.log(`Campus Tracker API listening on port ${PORT}`));
-=======
-async function startServer() {
-  try {
-    await initializeDatabase();
-
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log('=================================');
-      console.log(`Campus Tracker API is running on port ${PORT}`);
-      console.log('=================================');
-    });
-  } catch (err) {
-    console.error('Failed to start server due to database initialization error:', err.message);
-    process.exit(1);
-  }
-}
-
-startServer();
->>>>>>> 8790b48 (Update frontend and backend for campus supply tracker)
